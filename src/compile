@@ -1,0 +1,1 @@
+javac HelperFunctions.java ProgOptions.java Duplicate.java MagicSquareSolution.java MagicSquareSolver.java GeneticAlgorithmSolver.java SimulatedAnnealingSolver.java MSMain.java
