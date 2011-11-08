@@ -4,6 +4,8 @@ public class MSMain
     
     private static ParseState parseState = ParseState.NONE;    
     
+    private static final long NANOSEC_IN_1_MINUTE = 60000000000l;
+    
     public static void main(String[] args)
     {
         ProgOptions options = new ProgOptions();
@@ -43,15 +45,20 @@ public class MSMain
                 }
             }
         }
+                
+        MagicSquareSolver solver = new GeneticAlgorithmSolver(options);
+//        MagicSquareSolver solver = new SimulatedAnnealingSolver(options);
         
-//        MagicSquareSolver solver = new GeneticAlgorithmSolver(options);
-        MagicSquareSolver solver = new SimulatedAnnealingSolver(options);
+        long startTime = System.nanoTime();
         
-        MagicSquareSolution bestSolution = solver.solve();
+        // algorithm is allowed to run for 1 minute
+        MagicSquareSolution bestSolution = solver.solve(NANOSEC_IN_1_MINUTE);
+        
+        long elapsedTimeSec = (System.nanoTime() - startTime)/1000000000;
+        
+        System.out.println("Best solution found after " + elapsedTimeSec 
+                         + " seconds has fitness " + bestSolution.fitness + ":");
         
         HelperFunctions.outputSquare(bestSolution.square, options.n);
-        
-        
-        
     }
 }

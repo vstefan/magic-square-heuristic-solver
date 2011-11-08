@@ -1,6 +1,6 @@
 
 public interface MagicSquareSolver
 {
-    public MagicSquareSolution solve();
+    public MagicSquareSolution solve(long allowedTimeNanoSec);
 
 }

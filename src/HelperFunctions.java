@@ -165,4 +165,62 @@ public class HelperFunctions
             missing.remove(missingIndex);
         }
     }
+
+
+    public static int[][] mutateSwapRowsForColumns(Random rand, int[][] square, int n, int swapCount)
+    {    
+        int[][] copy = square.clone();
+        
+        for(int i=0; i<swapCount; i++)
+        {
+            int rowIndex = rand.nextInt(n);
+            int colIndex = rand.nextInt(n);
+
+            for(int j=0; j<n; j++)
+            {
+                int temp          = copy[j][colIndex];
+                copy[j][colIndex] = copy[rowIndex][j];
+                copy[rowIndex][j] = temp;
+            }
+        }
+                
+        return copy;
+    }
+    
+    
+    public static int[][] mutateSwapValues(Random rand, int[][] square, int n, int swapCount)
+    {
+        int[][] copy = square.clone();
+        
+        for(int i=0; i<swapCount; i++)
+        {
+            int r1 = rand.nextInt(n);
+            int c1 = rand.nextInt(n);
+            int r2 = rand.nextInt(n);
+            int c2 = rand.nextInt(n);
+            
+            int temp     = copy[r1][c1];
+            copy[r1][c1] = copy[r2][c2];
+            copy[r2][c2] = temp;
+        }
+        
+        return copy;
+    }
+    
+    
+    public static void mutateSwapValuesInPlace(Random rand, int[][] square, int n, int swapCount)
+    {
+        for(int i=0; i<swapCount; i++)
+        {
+            int r1 = rand.nextInt(n);
+            int c1 = rand.nextInt(n);
+            int r2 = rand.nextInt(n);
+            int c2 = rand.nextInt(n);
+            
+            int temp       = square[r1][c1];
+            square[r1][c1] = square[r2][c2];
+            square[r2][c2] = temp;
+        }
+    }
+
 }

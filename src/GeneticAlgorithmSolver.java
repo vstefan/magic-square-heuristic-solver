@@ -63,9 +63,8 @@ class GAMagicSquarePopulation
 public class GeneticAlgorithmSolver implements MagicSquareSolver
 {
     // algorithm parameters
-    private final int    POPULATION_SIZE  = 100;
+    private final int    POPULATION_SIZE  = 300;
     private final int    MATING_POOL_SIZE = POPULATION_SIZE/2;
-    private final int    GENERATIONS      = 500;
     private final double MUTATION_PROB    = 0.10; // % chance of mutation
     private final int    MUTATION_COUNT   = 1;    // number of mutations
     
@@ -78,15 +77,17 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
         options = progOptions;
     }
     
-    public MagicSquareSolution solve()
+    public MagicSquareSolution solve(long allowedTimeNanoSec)
     {
         GAMagicSquarePopulation squares = createInitialPopulation(POPULATION_SIZE);
         
         //computeAccumulatedNormalisedFitness(squares.population);
         
         int generationCount = 0;
-        
-        for(; generationCount<GENERATIONS; generationCount++)
+                
+        long startTime = System.nanoTime();
+                
+        do
         {
             computeAndSortByNormalisedFitness(squares.population, squares.fitnessSum);
             
@@ -100,7 +101,10 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
             {
                 break;
             }
-        }
+            
+            generationCount++;
+            
+        }while(System.nanoTime() - startTime < allowedTimeNanoSec);
         
         GAMagicSquare bestSolution = squares.population.get(squares.bestFitnessIndex);
          
@@ -184,23 +188,14 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
     
     private void mutate(int[][] square, int n)
     {
-        for(int i=0; i<MUTATION_COUNT; i++)
-        {
-            int r1 = rand.nextInt(n);
-            int c1 = rand.nextInt(n);
-            int r2 = rand.nextInt(n);
-            int c2 = rand.nextInt(n);
-            
-            int temp = square[r1][c1];
-            square[r1][c1] = square[r2][c2];
-            square[r2][c2] = temp;
-        }
+        HelperFunctions.mutateSwapValuesInPlace(rand, square, n, MUTATION_COUNT);
     }
     
         
     private ArrayList<GAMagicSquare> createMatingPool(ArrayList<GAMagicSquare> population, int size)
     {
-        return createMatingPoolFromTournament(population, size);
+//        return createMatingPoolFromTournament(population, size);
+        return createMatingPoolFromFittest(population, size);
     }
     
     
@@ -231,7 +226,7 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
     private ArrayList<GAMagicSquare> createMatingPoolFromFittest(ArrayList<GAMagicSquare> population, int size)
     {
         ArrayList<GAMagicSquare> matingPool = new ArrayList<GAMagicSquare>(size);
-        int matingPoolIndex               = 0;
+        int matingPoolIndex                 = 0;
         
         for(int i=0; matingPoolIndex<size; i++)
         {
@@ -285,8 +280,6 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
         {
             GAMagicSquare square = list.get(i);
             square.accumulatedNormalisedFitness = square.normalisedFitness + list.get(i-1).normalisedFitness;
-            
-            //System.out.println(list.get(i).normalisedFitness);
         }
     }
     

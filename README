@@ -1,0 +1,35 @@
+A collection of heuristic algorithms for creating magic squares. Each algorithm runs until
+it finds a magic square or 60 seconds have elapsed. Currently implemented:
+
+- Simulated Annealing
+- Genetic Algorithm
+
+To build:
+./compile
+
+To run:
+./run
+
+Best result so far:
+===================
+
+n = 10 solved in 52 seconds using Genetic Algorithm with:
+
+- POPULATION_SIZE  = 300;
+- MATING_POOL_SIZE = 150;
+- MUTATION_PROB    = 0.10;
+- MUTATION_COUNT   = 1;
+- single column index cut crossover
+- in-place value swap mutation
+- mating pool selection in order of fittest individuals
+
+16 86 17 52 58 62 1 39 99 75
+2 48 89 13 90 12 100 84 59 8
+93 81 64 5 55 29 33 50 26 69
+72 61 18 10 21 65 87 3 95 73
+77 14 11 96 83 7 20 97 37 63
+85 66 36 80 6 92 31 27 57 25
+28 82 44 88 19 34 51 23 38 98
+24 15 56 47 53 78 71 70 49 42
+40 9 91 60 46 94 35 67 41 22
+68 43 79 54 74 32 76 45 4 30
