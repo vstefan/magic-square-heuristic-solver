@@ -63,10 +63,14 @@ class GAMagicSquarePopulation
 public class GeneticAlgorithmSolver implements MagicSquareSolver
 {
     // algorithm parameters
-    private final int    POPULATION_SIZE  = 300;
-    private final int    MATING_POOL_SIZE = POPULATION_SIZE/2;
-    private final double MUTATION_PROB    = 0.10; // % chance of mutation
-    private final int    MUTATION_COUNT   = 1;    // number of mutations
+    private final int    POPULATION_SIZE    = 300;
+    private final int    MATING_POOL_SIZE   = POPULATION_SIZE/2;
+    private final double MUTATION_PROB      = 0.10; // % chance of mutation
+    private final int    MUTATION_COUNT     = 1;    // number of mutations
+    // number of best individuals to carry forward into next generation
+    private final int    ELITE_COUNT        = POPULATION_SIZE/10;
+    // chance of a weaker individual being picked over a stronger in tournament selection
+    private final double WEAKER_SELECT_PROB = 0.15;
     
     private Random       rand;
     private ProgOptions  options;
@@ -93,7 +97,7 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
             
             ArrayList<GAMagicSquare> matingPool = createMatingPool(squares.population, MATING_POOL_SIZE);
             
-            squares = createNextGeneration(matingPool, POPULATION_SIZE, options.n, options.m);
+            squares = createNextGeneration(squares.population, matingPool, POPULATION_SIZE, ELITE_COUNT, options.n, options.m);
             
             System.out.println("Generation #" + generationCount + ": best fitness: " + squares.bestFitness);
             
@@ -111,19 +115,29 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
         return new MagicSquareSolution(bestSolution.square, bestSolution.fitness, generationCount);
     }
     
-    
+       
     private GAMagicSquarePopulation createNextGeneration(
-            ArrayList<GAMagicSquare> matingPool, 
+            ArrayList<GAMagicSquare> previousGeneration,
+            ArrayList<GAMagicSquare> matingPool,
             int                      size,
+            int                      eliteCount,
             int                      n,
             int                      m)
     {
+        int fitnessSum                   = 0;
+        int bestFitness                  = Integer.MAX_VALUE;
+        int bestFitnessIndex             = 0;
         ArrayList<GAMagicSquare> nextGen = new ArrayList<GAMagicSquare>(size);
-        int fitnessSum       = 0;
-        int bestFitness      = Integer.MAX_VALUE;
-        int bestFitnessIndex = 0;
+
+        for(int i=0; i<eliteCount; i++)
+        {
+            GAMagicSquare eliteSquare = previousGeneration.get(i);
+            fitnessSum += eliteSquare.fitness;
+            
+            nextGen.add(i, eliteSquare);
+        }
         
-        for(int i=0; i<size; i++)
+        for(int i=eliteCount; i<size; i++)
         {   
             GAMagicSquare newSquare = crossoverAndMutate(matingPool.get(rand.nextInt(matingPool.size())), 
                                                          matingPool.get(rand.nextInt(matingPool.size())),
@@ -186,6 +200,65 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
     }
     
     
+    private GAMagicSquare crossoverAndMutate(GAMagicSquare p1, GAMagicSquare p2, GAMagicSquare p3, int n, int m)
+    {
+        int[][] childSquare = new int[n][n];
+        
+        int colCutIndex1 = rand.nextInt(n);
+        int colCutIndex2 = 0;
+        do{
+            colCutIndex2 = rand.nextInt(n);
+        }while(colCutIndex2 == colCutIndex1);
+
+        if(colCutIndex1 > colCutIndex2)
+        {
+            int temp     = colCutIndex1;
+            colCutIndex1 = colCutIndex2;
+            colCutIndex2 = temp;
+        }
+        
+        for(int i=0; i<n; i++)
+        {
+            // take from p1: all values to left of first column cut
+            for(int j=0; j<colCutIndex1; j++)
+            {
+                childSquare[i][j] = p1.square[i][j];
+            }
+            
+            // take from p2: all values between first & second cuts
+            for(int j=colCutIndex1; j<colCutIndex2; j++)
+            {
+                childSquare[i][j] = p2.square[i][j];
+            }
+            
+            // take rest from p3
+            for(int j=colCutIndex2; j<n; j++)
+            {
+                childSquare[i][j] = p3.square[i][j];
+            }
+        }
+        
+        /*
+        System.out.println(colCutIndex);
+        HelperFunctions.outputSquare(p1.square, n);
+        System.out.println();
+        HelperFunctions.outputSquare(p2.square, n);
+        System.out.println();
+        HelperFunctions.outputSquare(childSquare, n);
+        System.out.println();
+        */
+        if(rand.nextDouble() < MUTATION_PROB)
+        {
+            mutate(childSquare, n);
+        }
+        
+        HelperFunctions.repair(rand, childSquare, n);
+        //HelperFunctions.outputSquare(childSquare, n);
+       
+        return new GAMagicSquare(childSquare, HelperFunctions.evalFitness(childSquare, n, m));
+    }
+    
+    
     private void mutate(int[][] square, int n)
     {
         HelperFunctions.mutateSwapValuesInPlace(rand, square, n, MUTATION_COUNT);
@@ -194,8 +267,8 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
         
     private ArrayList<GAMagicSquare> createMatingPool(ArrayList<GAMagicSquare> population, int size)
     {
-//        return createMatingPoolFromTournament(population, size);
-        return createMatingPoolFromFittest(population, size);
+        return createMatingPoolFromTournament(population, size);
+//        return createMatingPoolFromFittest(population, size);
     }
     
     
@@ -209,7 +282,7 @@ public class GeneticAlgorithmSolver implements MagicSquareSolver
             GAMagicSquare s1 = population.get(rand.nextInt(population.size()));
             GAMagicSquare s2 = population.get(rand.nextInt(population.size()));
             
-            if(s1.fitness < s2.fitness)
+            if(s1.fitness < s2.fitness && rand.nextDouble() > WEAKER_SELECT_PROB)
             {
                 matingPool.add(matingPoolIndex++, s1);                
             }
